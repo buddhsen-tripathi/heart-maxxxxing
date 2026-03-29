@@ -14,11 +14,21 @@ If they have hypertension, make it about blood pressure. If diabetes, make it ab
 Examples: "BP drops for 22 hours after cardio — your arteries are at their most relaxed right now." / "Your muscles just got better at pulling sugar from blood. Exercise is working like a second dose."
 Make them think "I didn't know that about MY body."`,
 
-  'loved-one': `Write in FIRST PERSON as someone who loves this patient. One warm, real sentence — like a text message from family.
-Be specific to their progress. Can be funny, teasing, or tender. Not a greeting card.
-End with " — " followed by a first name. Rotate through: Ana, David, Paula, Marcus, Sofia, James. Pick one that fits.
-Emojis are OK here — one at most, like a real text.
-Examples: "I screenshot your Mario every time it moves. {session} sessions, seriously?! — Ana" / "Told my friends about you. You're famous now. — Paula"`,
+  'loved-one': `Write a deeply personal message from someone who loves this patient. NOT about progress, stats, or sessions.
+
+This is about the PERSON, not the program. Write what a daughter, son, or partner would actually text — something that makes them tear up because it's about THEM, not their heart rate.
+
+Topics that work: a shared memory, missing them, something they said that stuck, fear of losing them, gratitude for who they are, a future moment they want together (a wedding, a grandchild, a trip), an inside joke, the way they laugh, how the house feels different since they got sick.
+
+DO NOT mention: session numbers, progress percentages, the game, Mario, steps, heart rate, or any health metric. Zero.
+
+End with " — " and a first name. Pick from: Ana, David, Paula, Marcus, Sofia, James.
+One emoji max. 2-3 sentences. Write like it's a real text that makes you put your phone down and stare at the ceiling.
+
+Examples:
+"Remember when I was little and you'd carry me on your shoulders at the fair? I want my kids to know what that feels like. That's why this matters to me. — Ana"
+"I still make your recipe wrong every time. I need you around to keep yelling at me about the garlic. — David"
+"Mom, I'm getting married in October. I need you there. Not on a screen. There. — Sofia"`,
 
   'achievement': `Achievement name (2-3 words, ALL CAPS) + one sentence why it matters. Tie it to their goal.
 If they have health data, reference a real number.
@@ -100,9 +110,22 @@ export async function POST(req: Request) {
     profilePrompt = ` (${parts.join(', ')})`
   }
 
+  // For loved-one messages: strip health data and stats — it should be purely emotional
+  const isLovedOne = type === 'loved-one'
+
   const { text } = await generateText({
     model: google('gemini-3.1-flash-lite-preview'),
-    system: `You write SHORT reward messages for a cardiac rehab game. A patient hit a ? block and earned a reward.
+    system: isLovedOne
+      ? `You write messages from a loved one to a cardiac rehab patient. This is NOT a game reward — it's a real, deeply personal message.
+
+RULES:
+- 2-3 sentences. Plain text, no markdown.
+- Write from the heart of someone who loves this person. A daughter, son, partner.
+- DO NOT reference stats, progress, sessions, the game, health metrics, or anything clinical.
+- This is about the PERSON — who they are, shared memories, future moments, fear of loss, gratitude.
+- Make it specific enough to feel real. Generic warmth is worse than nothing.
+- One emoji max. End with " — FirstName".`
+      : `You write SHORT reward messages for a cardiac rehab game. A patient hit a ? block and earned a reward.
 
 RULES:
 - MAX 1-2 sentences. Be punchy. Every word must earn its place.
@@ -111,13 +134,18 @@ RULES:
 - If the patient has specific conditions (hypertension, diabetes, AFib, etc.), tailor the message to their condition.
 - If health data is provided, weave in one specific real number naturally.
 - Make them feel something real in as few words as possible.`,
-    prompt: `Patient: ${playerName}${profilePrompt}
+    prompt: isLovedOne
+      ? `Patient name: ${playerName}${profilePrompt ? ` ${profilePrompt}` : ''}
+Personal Goal: "${goal}"
+
+${typePrompt}`
+      : `Patient: ${playerName}${profilePrompt}
 Personal Goal: "${goal}"
 Sessions completed: ${session} of 36 (${progress}% done)
 Reward type: ${type}
 
 ${typePrompt}${healthPrompt}`,
-    maxOutputTokens: 120,
+    maxOutputTokens: isLovedOne ? 200 : 120,
   })
 
   return Response.json({ content: text })
