@@ -132,20 +132,20 @@ export default function GameHUD({
 
       {/* Fitbit connected indicator (full insights panel is rendered separately) */}
       {gfitConnected && !healthTrends && (
-        <div className="flex items-center justify-center gap-2 px-3 py-1.5 bg-teal-900/40 border-b border-teal-700/30">
-          <span className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-pulse" />
-          <span className="font-pixel text-[7px] text-teal-400">FITBIT</span>
-          <span className="text-[10px] text-sky-400 animate-pulse">loading...</span>
+        <div className="flex items-center justify-center gap-2 px-3 py-1 bg-black/60 border-b-2 border-[#a04000]/30">
+          <span className="w-1.5 h-1.5 bg-[#80d010] rounded-full animate-pulse" />
+          <span className="font-pixel text-[7px] text-[#80d8ff]">FITBIT</span>
+          <span className="font-pixel text-[7px] text-[#fcd890] animate-pulse">LOADING...</span>
         </div>
       )}
 
       {!gfitConnected && (
         <button
           onClick={onConnectClick}
-          className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-sky-950/40 border-b border-sky-700/20 hover:bg-teal-900/30 transition-colors cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 px-3 py-1 bg-black/40 border-b-2 border-[#a04000]/20 hover:bg-[#a04000]/10 transition-colors cursor-pointer"
         >
-          <Watch size={16} weight="fill" className="text-sky-400" />
-          <span className="font-pixel text-[10px] text-sky-500 hover:text-teal-400 transition-colors">
+          <Watch size={14} weight="fill" className="text-[#6b88ff]" />
+          <span className="font-pixel text-[8px] text-[#6b88ff] hover:text-[#fcd890] transition-colors">
             CONNECT FITBIT
           </span>
         </button>

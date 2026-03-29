@@ -13,104 +13,96 @@ interface HealthInsightsPanelProps {
 function computeBenefits(t: HealthTrends) {
   const benefits: Array<{ label: string; value: string; detail: string }> = []
 
-  // Each 10 BPM lower resting HR ≈ 15-20% lower CV mortality (Cooney et al., Eur Heart J 2010)
   if (t.deltas.restingHR != null && t.deltas.restingHR < 0) {
     const bpmDrop = Math.abs(t.deltas.restingHR)
-    const riskReduction = Math.round(bpmDrop * 1.8)
-    benefits.push({ label: 'CV Risk', value: `↓~${riskReduction}%`, detail: `${bpmDrop} BPM lower HR` })
+    benefits.push({ label: 'CV Risk', value: `↓~${Math.round(bpmDrop * 1.8)}%`, detail: `${bpmDrop} BPM lower HR` })
   }
-
-  // Each 1000 steps/day ≈ 6-10% lower all-cause mortality (Saint-Maurice et al., JAMA 2020)
   if (t.deltas.dailySteps != null && t.deltas.dailySteps > 0) {
     const reduction = Math.round((t.deltas.dailySteps / 1000) * 8)
-    if (reduction > 0) {
-      benefits.push({ label: 'Mortality Risk', value: `↓~${reduction}%`, detail: `+${t.deltas.dailySteps.toLocaleString()} steps/day` })
-    }
+    if (reduction > 0) benefits.push({ label: 'Mortality', value: `↓~${reduction}%`, detail: `+${t.deltas.dailySteps.toLocaleString()} steps/day` })
   }
-
-  // 150 min/week ≈ +3.4 yrs, 75 min/week ≈ +1.8 yrs (Moore et al., PLOS Medicine 2012)
   if (t.totals.totalActiveMinutes != null && t.totals.programDays != null && t.totals.programDays > 0) {
     const weeklyEst = Math.round((t.totals.totalActiveMinutes / t.totals.programDays) * 7)
-    if (weeklyEst >= 150) benefits.push({ label: 'Est. Life Gain', value: '+3.4 yrs', detail: `~${weeklyEst} min/wk active` })
-    else if (weeklyEst >= 75) benefits.push({ label: 'Est. Life Gain', value: '+1.8 yrs', detail: `~${weeklyEst} min/wk active` })
-    else if (weeklyEst >= 30) benefits.push({ label: 'Est. Life Gain', value: '+0.9 yrs', detail: `~${weeklyEst} min/wk active` })
+    if (weeklyEst >= 150) benefits.push({ label: 'Life Gain', value: '+3.4 yrs', detail: `~${weeklyEst} min/wk` })
+    else if (weeklyEst >= 75) benefits.push({ label: 'Life Gain', value: '+1.8 yrs', detail: `~${weeklyEst} min/wk` })
+    else if (weeklyEst >= 30) benefits.push({ label: 'Life Gain', value: '+0.9 yrs', detail: `~${weeklyEst} min/wk` })
   }
-
-  // Distance walked
   if (t.totals.totalSteps != null && t.totals.totalSteps > 0) {
     const km = t.totals.totalSteps * 0.0008
     if (km >= 1) benefits.push({ label: 'Distance', value: `${km.toFixed(0)} km`, detail: `${t.totals.totalSteps.toLocaleString()} steps` })
   }
-
-  // Rehab completion → readmission reduction (Cochrane review: 43% at full completion)
   if (t.totals.programDays != null && t.totals.programDays > 0) {
     const pct = Math.min(100, Math.round((t.totals.programDays / 84) * 100))
     const reduction = Math.round(43 * (pct / 100))
-    if (reduction > 0) benefits.push({ label: 'Readmit Risk', value: `↓~${reduction}%`, detail: `${pct}% program done` })
+    if (reduction > 0) benefits.push({ label: 'Readmit', value: `↓~${reduction}%`, detail: `${pct}% done` })
   }
-
   return benefits
 }
 
-// ── Data-driven insights ──
-
 function getInsights(t: HealthTrends): string[] {
   const out: string[] = []
-
   if (t.deltas.restingHR != null) {
-    if (t.deltas.restingHR < -3) out.push(`❤️ Resting HR down ${Math.abs(t.deltas.restingHR)} BPM — your heart is pumping more efficiently.`)
-    else if (t.deltas.restingHR < 0) out.push(`❤️ Resting HR improved by ${Math.abs(t.deltas.restingHR)} BPM. Steady progress.`)
-    else if (t.deltas.restingHR > 3) out.push(`❤️ HR is up ${t.deltas.restingHR} BPM. Stress and sleep matter — you'll bounce back.`)
+    if (t.deltas.restingHR < -3) out.push(`Resting HR down ${Math.abs(t.deltas.restingHR)} BPM — heart is getting stronger.`)
+    else if (t.deltas.restingHR < 0) out.push(`Resting HR improved by ${Math.abs(t.deltas.restingHR)} BPM. Steady progress.`)
+    else if (t.deltas.restingHR > 3) out.push(`HR is up ${t.deltas.restingHR} BPM. Stress and sleep matter — you'll bounce back.`)
   }
   if (t.deltas.dailySteps != null) {
-    if (t.deltas.dailySteps > 1000) out.push(`👟 ${t.deltas.dailySteps.toLocaleString()} more steps/day than week 1.`)
-    else if (t.deltas.dailySteps > 0) out.push(`👟 Steps trending up by ${t.deltas.dailySteps.toLocaleString()}/day.`)
-    else if (t.deltas.dailySteps < -500) out.push(`👟 Steps are down from baseline. Even a short walk today counts.`)
+    if (t.deltas.dailySteps > 1000) out.push(`${t.deltas.dailySteps.toLocaleString()} more steps/day than week 1.`)
+    else if (t.deltas.dailySteps > 0) out.push(`Steps trending up by ${t.deltas.dailySteps.toLocaleString()}/day.`)
+    else if (t.deltas.dailySteps < -500) out.push(`Steps are down from baseline. Even a short walk counts.`)
   }
   if (t.deltas.activeMinutes != null) {
-    if (t.deltas.activeMinutes > 10) out.push(`⚡ ${t.deltas.activeMinutes} more active minutes/day — endurance is growing.`)
-    else if (t.deltas.activeMinutes < -10) out.push(`⚡ Active time dipped. A 10-minute walk is enough to turn this around.`)
+    if (t.deltas.activeMinutes > 10) out.push(`${t.deltas.activeMinutes} more active minutes/day — endurance is growing.`)
+    else if (t.deltas.activeMinutes < -10) out.push(`Active time dipped. A 10-minute walk turns this around.`)
   }
   if (t.current.sleepMinutes != null) {
-    if (t.current.sleepMinutes >= 420) out.push(`🌙 ${Math.floor(t.current.sleepMinutes / 60)}h sleep — great for recovery.`)
-    else if (t.current.sleepMinutes < 360 && t.current.sleepMinutes > 0) out.push(`🌙 Only ${Math.floor(t.current.sleepMinutes / 60)}h sleep. Your heart heals best with 7+.`)
+    if (t.current.sleepMinutes >= 420) out.push(`${Math.floor(t.current.sleepMinutes / 60)}h sleep — great for recovery.`)
+    else if (t.current.sleepMinutes < 360 && t.current.sleepMinutes > 0) out.push(`Only ${Math.floor(t.current.sleepMinutes / 60)}h sleep. Heart heals best with 7+.`)
   }
-
   return out
 }
-
-// ── Milestone: data-derived summary every 3 sessions ──
 
 function getMilestoneSummary(t: HealthTrends, session: number): { summary: string; appreciation: string } | null {
   if (session === 0 || session % 3 !== 0) return null
 
   const parts: string[] = []
   if (t.current.restingHR != null) parts.push(`HR ${t.current.restingHR}bpm`)
-  if (t.current.avgDailySteps != null) parts.push(`${t.current.avgDailySteps.toLocaleString()} steps/day avg`)
+  if (t.current.avgDailySteps != null) parts.push(`${t.current.avgDailySteps.toLocaleString()} steps/day`)
   if (t.current.activeMinutes != null) parts.push(`${t.current.activeMinutes}m active`)
-  if (t.totals.totalSteps != null) parts.push(`${(t.totals.totalSteps / 1000).toFixed(0)}k total steps`)
+  if (t.totals.totalSteps != null) parts.push(`${(t.totals.totalSteps / 1000).toFixed(0)}k total`)
 
   const summary = parts.length > 0 ? `Session ${session}. ${parts.join(' · ')}` : `Session ${session} complete.`
-
   const progress = Math.round((session / 36) * 100)
+
   const appParts: string[] = []
-  if (t.deltas.restingHR != null && t.deltas.restingHR < 0) appParts.push(`Heart rate down ${Math.abs(t.deltas.restingHR)} BPM since you started`)
-  if (t.deltas.dailySteps != null && t.deltas.dailySteps > 0) appParts.push(`${t.deltas.dailySteps.toLocaleString()} more steps/day than week 1`)
-  if (t.totals.totalSteps != null && t.totals.totalSteps > 0) appParts.push(`${t.totals.totalSteps.toLocaleString()} total steps logged`)
+  if (t.deltas.restingHR != null && t.deltas.restingHR < 0) appParts.push(`HR down ${Math.abs(t.deltas.restingHR)} BPM since start`)
+  if (t.deltas.dailySteps != null && t.deltas.dailySteps > 0) appParts.push(`+${t.deltas.dailySteps.toLocaleString()} steps/day vs week 1`)
+  if (t.totals.totalSteps != null && t.totals.totalSteps > 0) appParts.push(`${t.totals.totalSteps.toLocaleString()} total steps`)
 
-  const appreciation = appParts.length > 0 ? `${progress}% done. ${appParts[0]}.` : `${progress}% complete.`
-
-  return { summary, appreciation }
+  return { summary, appreciation: appParts.length > 0 ? `${progress}% done. ${appParts[0]}.` : `${progress}% complete.` }
 }
 
-function StatBox({ label, value, sub, color }: { label: string; value: string; sub?: string; color: string }) {
+function StatBox({ label, value, delta, good }: {
+  label: string; value: string; delta?: string; good?: boolean | null
+}) {
   return (
-    <div className="flex flex-col items-center gap-0.5 min-w-[70px]">
-      <span className="font-pixel text-[7px] text-sky-500 uppercase">{label}</span>
-      <span className={`font-pixel text-sm ${color}`}>{value}</span>
-      {sub && <span className="text-[9px] text-sky-500">{sub}</span>}
+    <div className="flex flex-col items-center gap-0.5 min-w-[65px]">
+      <span className="font-pixel text-[6px] text-[#80d8ff] uppercase">{label}</span>
+      <span className="font-pixel text-sm text-white">{value}</span>
+      {delta && (
+        <span className={`font-pixel text-[7px] ${good === true ? 'text-[#80d010]' : good === false ? 'text-[#e02020]' : 'text-[#fcd890]'}`}>
+          {delta}
+        </span>
+      )}
     </div>
   )
+}
+
+function formatDelta(val?: number, unit = '', invert = false): { text: string; good: boolean } | null {
+  if (val == null || val === 0) return null
+  const good = invert ? val < 0 : val > 0
+  const arrow = val > 0 ? '↑' : '↓'
+  return { text: `${arrow}${Math.abs(val)}${unit}`, good }
 }
 
 export default function HealthInsightsPanel({ trends, currentSession, hideMilestone }: HealthInsightsPanelProps) {
@@ -118,78 +110,80 @@ export default function HealthInsightsPanel({ trends, currentSession, hideMilest
   const milestone = hideMilestone ? null : getMilestoneSummary(trends, currentSession)
   const benefits = computeBenefits(trends)
 
-  const deltaLabel = (val?: number, unit = '', invert = false) => {
-    if (val == null || val === 0) return undefined
-    const good = invert ? val < 0 : val > 0
-    const arrow = val > 0 ? '↑' : '↓'
-    const dot = good ? '\u25CF' : '\u25CB'
-    return `${dot} ${arrow}${Math.abs(val)}${unit}`
-  }
+  const hrDelta = formatDelta(trends.deltas.restingHR, '', true)
+  const stepsDelta = formatDelta(trends.deltas.dailySteps, '/d')
+  const activeDelta = formatDelta(trends.deltas.activeMinutes, 'm')
 
   return (
-    <div className="bg-sky-950/60 backdrop-blur-sm border-b border-teal-700/20">
+    <div className="bg-black/80 border-b-4 border-[#a04000]">
+      {/* Milestone banner */}
       {milestone && (
-        <div className="px-4 py-2.5 border-b border-amber-500/20 bg-amber-900/10">
-          <p className="text-amber-200 text-xs leading-relaxed">{milestone.summary}</p>
-          <p className="text-amber-400 text-xs leading-relaxed mt-1 font-medium">{milestone.appreciation}</p>
+        <div className="px-3 py-2 border-b-2 border-[#fcd890]/30 bg-[#a04000]/20">
+          <p className="font-pixel text-[8px] text-[#fcd890] leading-relaxed">{milestone.summary}</p>
+          <p className="font-pixel text-[7px] text-[#80d010] leading-relaxed mt-1">{milestone.appreciation}</p>
         </div>
       )}
 
+      {/* Insights */}
       {insights.length > 0 && (
-        <div className="px-4 py-2 border-b border-sky-800/30 space-y-1">
+        <div className="px-3 py-2 border-b-2 border-[#a04000]/20">
           {insights.map((text, i) => (
-            <p key={i} className="text-sky-200 text-xs leading-relaxed">{text}</p>
+            <p key={i} className="text-[10px] text-[#fcd890]/90 leading-relaxed">{text}</p>
           ))}
         </div>
       )}
 
-      <div className="flex items-center justify-around px-2 py-2.5 gap-1 overflow-x-auto no-scrollbar">
+      {/* Stats row */}
+      <div className="flex items-center justify-around px-2 py-2 gap-1 overflow-x-auto no-scrollbar border-b-2 border-[#a04000]/20">
         {trends.current.restingHR != null && (
-          <StatBox label="Resting HR" value={`${trends.current.restingHR}`} sub={deltaLabel(trends.deltas.restingHR, ' bpm', true)} color="text-red-400" />
+          <StatBox label="HR" value={`${trends.current.restingHR}`}
+            delta={hrDelta?.text} good={hrDelta?.good} />
         )}
         {trends.current.stepsToday != null && (
-          <StatBox label="Steps" value={trends.current.stepsToday.toLocaleString()} sub={deltaLabel(trends.deltas.dailySteps, '/day')} color="text-emerald-400" />
+          <StatBox label="Steps" value={trends.current.stepsToday.toLocaleString()}
+            delta={stepsDelta?.text} good={stepsDelta?.good} />
         )}
         {trends.current.activeMinutes != null && (
-          <StatBox label="Active" value={`${trends.current.activeMinutes}m`} sub={deltaLabel(trends.deltas.activeMinutes, 'm/day')} color="text-amber-400" />
+          <StatBox label="Active" value={`${trends.current.activeMinutes}m`}
+            delta={activeDelta?.text} good={activeDelta?.good} />
         )}
         {trends.current.sleepMinutes != null && (
-          <StatBox label="Sleep" value={`${Math.floor(trends.current.sleepMinutes / 60)}h${trends.current.sleepMinutes % 60}m`} color="text-indigo-400" />
+          <StatBox label="Sleep" value={`${Math.floor(trends.current.sleepMinutes / 60)}h${trends.current.sleepMinutes % 60}m`} />
         )}
         {trends.totals.totalSteps != null && trends.totals.totalSteps > 0 && (
-          <StatBox label="Total Steps" value={`${(trends.totals.totalSteps / 1000).toFixed(0)}k`} sub={`${trends.totals.programDays || 0} days`} color="text-teal-400" />
-        )}
-        {trends.totals.totalActiveMinutes != null && trends.totals.totalActiveMinutes > 0 && (
-          <StatBox label="Total Active" value={`${trends.totals.totalActiveMinutes}m`} color="text-orange-400" />
+          <StatBox label="Total" value={`${(trends.totals.totalSteps / 1000).toFixed(0)}k`}
+            delta={`${trends.totals.programDays || 0}d`} good={null} />
         )}
       </div>
 
+      {/* Health benefits row */}
       {benefits.length > 0 && (
-        <div className="border-t border-sky-800/30">
-          <div className="flex items-center justify-around px-2 py-2 gap-2 overflow-x-auto no-scrollbar">
+        <div className="px-2 py-1.5 border-b-2 border-[#a04000]/20">
+          <div className="flex items-center justify-around gap-1 overflow-x-auto no-scrollbar">
             {benefits.map((b, i) => (
-              <div key={i} className="flex flex-col items-center gap-0.5 min-w-[75px]">
-                <span className="font-pixel text-[6px] text-purple-400 uppercase">{b.label}</span>
-                <span className="font-pixel text-xs text-purple-300">{b.value}</span>
-                <span className="text-[8px] text-sky-600">{b.detail}</span>
+              <div key={i} className="flex flex-col items-center gap-0 min-w-[60px]">
+                <span className="font-pixel text-[5px] text-[#6b88ff] uppercase">{b.label}</span>
+                <span className="font-pixel text-[9px] text-[#80d010]">{b.value}</span>
+                <span className="text-[7px] text-[#a0501c]">{b.detail}</span>
               </div>
             ))}
           </div>
-          <p className="text-center text-[7px] text-sky-700 pb-1">Estimates based on AHA / JAMA / PLOS published research</p>
+          <p className="text-center font-pixel text-[5px] text-[#a0501c]/60 mt-0.5">AHA / JAMA / PLOS RESEARCH</p>
         </div>
       )}
 
+      {/* Baseline comparison */}
       {(trends.baseline.avgRestingHR != null || trends.baseline.avgDailySteps != null) && (
-        <div className="flex items-center justify-center gap-4 px-3 py-1.5 border-t border-sky-800/30 text-[9px] text-sky-500">
-          <span className="font-pixel text-[7px] text-sky-600">WEEK 1 → NOW</span>
+        <div className="flex items-center justify-center gap-3 px-3 py-1.5 text-[8px]">
+          <span className="font-pixel text-[6px] text-[#6b88ff]">WEEK 1→NOW</span>
           {trends.baseline.avgRestingHR != null && trends.current.restingHR != null && (
-            <span>HR: {trends.baseline.avgRestingHR} → <span className="text-red-400">{trends.current.restingHR}</span></span>
+            <span className="text-[#a0501c]">HR: {trends.baseline.avgRestingHR}→<span className="text-white">{trends.current.restingHR}</span></span>
           )}
           {trends.baseline.avgDailySteps != null && trends.current.avgDailySteps != null && (
-            <span>Steps: {trends.baseline.avgDailySteps.toLocaleString()} → <span className="text-emerald-400">{trends.current.avgDailySteps.toLocaleString()}</span></span>
+            <span className="text-[#a0501c]">Steps: {trends.baseline.avgDailySteps.toLocaleString()}→<span className="text-white">{trends.current.avgDailySteps.toLocaleString()}</span></span>
           )}
           {trends.baseline.avgActiveMinutes != null && trends.current.activeMinutes != null && (
-            <span>Active: {trends.baseline.avgActiveMinutes}m → <span className="text-amber-400">{trends.current.activeMinutes}m</span></span>
+            <span className="text-[#a0501c]">Active: {trends.baseline.avgActiveMinutes}m→<span className="text-white">{trends.current.activeMinutes}m</span></span>
           )}
         </div>
       )}
