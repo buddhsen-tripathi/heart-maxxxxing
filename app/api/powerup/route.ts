@@ -5,83 +5,26 @@ import { type PowerupType } from '../../lib/powerups'
 export const maxDuration = 15
 
 const TYPE_PROMPTS: Record<PowerupType, string> = {
-  'goal-progress': `Write a short, motivating goal-progress message (2-3 sentences).
+  'goal-progress': `One punchy sentence about a concrete milestone toward their goal. Be SPECIFIC to the goal.
+Examples: "Your heart can sustain a 10K now — marathon training starts here." / "15 minutes used to be your wall. Now you don't even notice it."
+Name what they can DO now, not a percentage.`,
 
-YOUR JOB: Break their goal into a concrete milestone that maps to their current progress. Be SPECIFIC — generic "you're doing great" is useless.
+  'health-tip': `One specific health fact tied to their goal or conditions. Not generic advice.
+Examples: "BP drops for 22 hours after cardio — your arteries are at their most relaxed right now." / "Your muscles just got better at pulling sugar from blood. Exercise is working like a second dose."
+Make them think "I didn't know that about MY body."`,
 
-EXAMPLES of how to adapt to different goals:
-- Goal "run a marathon" at 25%: "Your heart can now sustain the effort of a solid 10K. That's 6 miles of proof that a marathon isn't a dream — it's a plan."
-- Goal "walk 30 minutes without stopping" at 50%: "Two weeks ago, 15 minutes felt like a wall. Now your body barely notices it. The 30-minute mark is right there."
-- Goal "play with my grandkids without getting winded" at 33%: "That breathlessness you used to feel after climbing stairs? It's already fading. Imagine keeping up at the park."
-- Goal "lose 20 pounds" at 75%: "Your metabolism is running hotter now — cardiac rehab patients burn more calories at rest. The scale is catching up to what your heart already knows."
-- Goal "get back to gardening" at 50%: "The bending, lifting, kneeling — your heart is handling more load every week. Your garden is going to have its best season."
-- Goal "reduce my medication" at 40%: "Patients who complete rehab often work with their doctor to reduce meds. You're building the evidence your body needs."
+  'loved-one': `Write in FIRST PERSON as a loved one. One warm, real sentence — like a text message.
+Be specific to their progress. Can be funny, teasing, or tender. Not a greeting card.
+End with " — " followed by a first name (rotate through: Ana, David, Paula, Marcus, Sofia, James). Pick one.
+Examples: "I screenshot your Mario every time it moves. {session} sessions, seriously?! — Ana" / "Told my friends about you. You're famous now. — Paula"`,
 
-RULES:
-- Name a CONCRETE sub-milestone they've likely reached (not just a percentage)
-- Connect it to something physical they can FEEL or DO now that they couldn't before
-- If the goal is vague ("get healthier"), invent a tangible marker ("you could probably walk a mile faster than you could 3 weeks ago")
-- End with forward momentum — what's next, not just what's done
-Tone: excited, personal, like a coach who knows their body.`,
+  'achievement': `Achievement name (2-3 words, ALL CAPS) + one sentence why it matters. Tie it to their goal.
+Examples: "MILE MAKER — Your heart didn't know this pace existed 12 sessions ago." / "PLAYGROUND READY — You can officially outrun a 5-year-old."`,
 
-  'health-tip': `Share one specific health tip (2-3 sentences) that connects DIRECTLY to something this patient cares about.
+  'heart-fact': `One mind-blowing fact about what's happening inside their body RIGHT NOW. Connect it to something they can feel.
+Examples: "Your heart is growing new blood vessels around blockages — building its own bypass." / "Your vagus nerve is 20% more responsive. That's why you sleep better."`,
 
-DON'T: Generic advice like "drink water" or "eat vegetables."
-DO: Tie it to their goal, conditions, or stage.
-
-EXAMPLES:
-- Patient with hypertension wanting to run: "Your blood pressure drops for up to 22 hours after a cardio session. That post-exercise window is literally when your arteries are at their most relaxed."
-- Diabetic patient in early rehab: "Your muscles just became better at pulling sugar from your blood — that's why exercise can work like a second dose of medication. Your body is learning."
-- Patient who wants to play with grandkids, mid-program: "The 'second wind' you feel around minute 15? That's your heart shifting into efficient mode. Kids run in bursts — your heart is learning to match that."
-
-Make them think "wow, I didn't know that about MY body." Not a pamphlet — a revelation.`,
-
-  'loved-one': `Write a short message (2-3 sentences) from the patient's daughter Ana.
-
-THIS IS NOT A HALLMARK CARD. Make it feel like a real text from a real daughter:
-- Reference something SPECIFIC about their goal or recent progress
-- Show she's paying attention to the game ("I saw your Mario hit session {session}!")
-- Include a small personal detail (inside joke, family reference, future plan together)
-- She can be funny, teasing, or emotional — real daughters aren't just "proud"
-
-EXAMPLES:
-- "Mom, {session} sessions?! Remember when you said you'd never stick with this? I screenshot your Mario every time it moves. Also, Dad says hi and that dinner's on him when you finish."
-- "I showed your game to my coworkers and now they're all asking how their parents can do this. You're literally famous. Keep going, I need bragging rights at session 36."`,
-
-  'achievement': `Create a SPECIFIC achievement that makes the patient feel legendary (2-3 sentences).
-
-DON'T: Generic badges like "Great Job!" or "Keep Going!"
-DO: Make the achievement name reference their specific goal or journey.
-
-EXAMPLES:
-- Goal "run a marathon", session 12: "🏅 MILE MAKER — You've built the cardiovascular base of someone training for a half marathon. 12 sessions ago, your heart didn't know this pace existed."
-- Goal "play with grandkids", session 27: "🏅 PLAYGROUND READY — Your stamina now exceeds what it takes to chase a 5-year-old. You're not just recovering — you're becoming the fun grandparent."
-- Goal "get back to normal", session 9: "🏅 NEW NORMAL UNLOCKED — Your 'normal' at session 9 would've been your 'great day' at session 1. The bar moved and you didn't even notice."
-
-The name should be 2-3 words, ALL CAPS, memorable. The description should make them feel the progress in their bones.`,
-
-  'heart-fact': `Share one MIND-BLOWING fact about what's happening inside their body right now (2-3 sentences).
-
-DON'T: Textbook facts. "The heart pumps 2000 gallons a day."
-DO: Connect it to something they can FEEL happening.
-
-EXAMPLES:
-- Session 6: "Right now, your heart is literally growing new blood vessel branches around any blockages. It's called collateral circulation — your body is building its own bypass, one session at a time."
-- Session 15: "Your heart muscle fibers have started to realign. Before rehab, some were pulling in different directions from the damage. Now they're rowing together like a crew team."
-- Session 30: "Your vagus nerve — the one that calms your heart down after stress — is now 20% more responsive than when you started. That's why you sleep better. Your heart learned to relax."
-
-Make them think "my body is DOING this?!" — awe about their own biology.`,
-
-  'celebration': `Write a deeply personal triumph message (3-4 sentences) for completing ALL 36 sessions.
-
-This is the biggest moment. Reference:
-- Their specific goal and how the journey changed them
-- The 43% reduction in rehospitalization risk
-- Something about who they are NOW vs who they were at session 1
-- The people who love them and what this means for that future
-
-Don't be generic. This patient pushed through fear, doubt, bad days, and the temptation to quit. Honor that specifically.
-Tone: emotional enough to make them tear up, but strong — they're a warrior, not a victim.`,
+  'celebration': `Two sentences for completing all 36 sessions. Reference their specific goal, the 43% risk reduction, and who they are now vs session 1. Make it hit hard.`,
 }
 
 interface HealthContext {
@@ -137,20 +80,22 @@ export async function POST(req: Request) {
 
   const { text } = await generateText({
     model: google('gemini-3.1-flash-lite-preview'),
-    system: `You write reward messages for a cardiac rehab game (Super Mario style). A patient just hit a ? block.
+    system: `You write SHORT reward messages for a cardiac rehab game. A patient hit a ? block.
 
 RULES:
-- Max 3 sentences. Plain text only, no markdown.
-- Be DEEPLY PERSONAL. Reference their name, goal, conditions, and progress. Generic = failure.
-- If health data is provided, weave in specific numbers naturally ("your resting HR dropped 4 BPM — that's your heart literally getting more efficient").
-- Never use medical jargon. Write like a human who knows them, not a pamphlet.
-- Make them FEEL something — pride, awe, warmth, determination. Not just "good job."`,
+- MAX 1-2 sentences. Be punchy. Every word must earn its place.
+- Plain text only, no markdown, no emojis.
+- Be personal — use their name, reference their specific goal. Generic = failure.
+- For "loved-one" type: write in FIRST PERSON as Ana (their daughter). Like a real text message.
+- If health data is provided, weave in one specific number naturally.
+- Make them feel something real in as few words as possible.`,
     prompt: `Patient: ${playerName}${patientProfile ? ` (${patientProfile.age}yo ${patientProfile.gender}, BP ${patientProfile.bloodPressure}, resting HR ${patientProfile.restingHeartRate} BPM, conditions: ${patientProfile.pastDiseases.join(', ') || 'none'})` : ''}
 Personal Goal: "${goal}"
 Sessions completed: ${session} of 36 (${progress}% done)${patientProfile?.rehabPhase ? `\nCurrent rehab phase: ${patientProfile.rehabPhase}` : ''}
 Reward type: ${type}
 
 ${typePrompt}${healthPrompt}`,
+    maxOutputTokens: 100,
   })
 
   return Response.json({ content: text })

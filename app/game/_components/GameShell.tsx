@@ -22,6 +22,7 @@ import StormOverlay from './StormOverlay'
 import CompletionScreen from './CompletionScreen'
 import FitbitConnectModal from './FitbitConnectModal'
 import HealthInsightsPanel from './HealthInsightsPanel'
+import { getBuddies, type Buddy } from '../../lib/buddies'
 
 export default function GameShell() {
   const router = useRouter()
@@ -43,6 +44,7 @@ export default function GameShell() {
   const [musicPlaying, setMusicPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const powerupCacheRef = useRef<Map<number, string>>(new Map())
+  const [buddies, setBuddies] = useState<Buddy[]>([])
 
   // Load state on mount
   useEffect(() => {
@@ -52,6 +54,7 @@ export default function GameShell() {
       return
     }
     setState(saved)
+    setBuddies(getBuddies(saved.playerName))
     if (saved.currentSession >= TOTAL_SESSIONS) {
       setShowCompletion(true)
     }
@@ -73,6 +76,29 @@ export default function GameShell() {
       audio.src = ''
     }
   }, [])
+
+  // Auto-play music on first user interaction (browsers require a gesture)
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio || musicPlaying) return
+
+    const startMusic = () => {
+      audio.play().then(() => setMusicPlaying(true)).catch(() => {})
+      document.removeEventListener('click', startMusic)
+      document.removeEventListener('touchstart', startMusic)
+      document.removeEventListener('keydown', startMusic)
+    }
+
+    document.addEventListener('click', startMusic, { once: true })
+    document.addEventListener('touchstart', startMusic, { once: true })
+    document.addEventListener('keydown', startMusic, { once: true })
+
+    return () => {
+      document.removeEventListener('click', startMusic)
+      document.removeEventListener('touchstart', startMusic)
+      document.removeEventListener('keydown', startMusic)
+    }
+  }, [musicPlaying])
 
   const toggleMusic = useCallback(() => {
     const audio = audioRef.current
@@ -412,6 +438,7 @@ export default function GameShell() {
         chatOpen={showChat}
         musicPlaying={musicPlaying}
         onToggleMusic={toggleMusic}
+        buddies={buddies}
       />
 
       {/* Health Insights */}
@@ -436,6 +463,7 @@ export default function GameShell() {
           grabbingPowerup={grabbingPowerup}
           viewedPowerups={state.viewedPowerups}
           onBrickClick={handleBrickClick}
+          buddies={buddies}
         />
       </div>
 

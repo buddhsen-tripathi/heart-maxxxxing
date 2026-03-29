@@ -5,6 +5,8 @@ import { TOTAL_SESSIONS, hasBrickAt } from '../../lib/game-state'
 import Character from './Character'
 import Brick from './Brick'
 import PhIcon from './PhIcon'
+import BuddyMarker from './BuddyMarker'
+import type { Buddy } from '../../lib/buddies'
 
 interface GameLevelProps {
   currentSession: number
@@ -16,6 +18,7 @@ interface GameLevelProps {
   grabbingPowerup: boolean
   viewedPowerups: number[]
   onBrickClick: (session: number) => void
+  buddies: Buddy[]
 }
 
 /** Map brick session → Phosphor icon name that pops out */
@@ -127,6 +130,7 @@ export default function GameLevel({
   grabbingPowerup,
   viewedPowerups,
   onBrickClick,
+  buddies,
 }: GameLevelProps) {
   const viewportRef = useRef<HTMLDivElement>(null)
 
@@ -228,6 +232,20 @@ export default function GameLevel({
         })}
 
         {/* Pipes removed — hopping animation not polished enough yet */}
+
+        {/* ===== Buddy markers (other patients) ===== */}
+        {buddies.map((buddy) => (
+          <div
+            key={buddy.id}
+            className="absolute z-[10]"
+            style={{
+              left: buddy.session * BLOCK_WIDTH + (BLOCK_WIDTH - 20) / 2,
+              bottom: 50,
+            }}
+          >
+            <BuddyMarker name={buddy.name} session={buddy.session} color={buddy.color} />
+          </div>
+        ))}
 
         {/* ===== Character (Mario) ===== */}
         <div

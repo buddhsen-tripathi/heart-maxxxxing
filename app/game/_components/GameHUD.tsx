@@ -4,7 +4,8 @@ import HeartMeter from './HeartMeter'
 import LuigiIcon from './LuigiIcon'
 import { TOTAL_SESSIONS } from '../../lib/game-state'
 import type { HealthTrends } from '../../lib/fitbit'
-import { Check, Heart, Watch, MusicNote, MusicNoteSimple } from '@phosphor-icons/react'
+import { Check, Heart, Watch, MusicNote, MusicNoteSimple, Users } from '@phosphor-icons/react'
+import type { Buddy } from '../../lib/buddies'
 
 interface GameHUDProps {
   hearts: number
@@ -22,6 +23,7 @@ interface GameHUDProps {
   chatOpen: boolean
   musicPlaying: boolean
   onToggleMusic: () => void
+  buddies: Buddy[]
 }
 
 function Delta({ value, unit, invert }: { value?: number; unit: string; invert?: boolean }) {
@@ -52,6 +54,7 @@ export default function GameHUD({
   chatOpen,
   musicPlaying,
   onToggleMusic,
+  buddies,
 }: GameHUDProps) {
   const progress = Math.round((currentSession / TOTAL_SESSIONS) * 100)
   const isComplete = currentSession >= TOTAL_SESSIONS
@@ -146,6 +149,32 @@ export default function GameHUD({
             CONNECT FITBIT
           </span>
         </button>
+      )}
+
+      {/* Buddy tracker */}
+      {buddies.length > 0 && (
+        <div className="flex items-center gap-3 px-3 py-1 bg-indigo-950/40 border-b border-indigo-700/20">
+          <span className="flex items-center gap-1 shrink-0">
+            <Users size={12} weight="fill" className="text-indigo-400" />
+            <span className="font-pixel text-[7px] text-indigo-400">COMPANIONS</span>
+          </span>
+          <div className="flex items-center gap-3 overflow-x-auto no-scrollbar">
+            {buddies.map((b) => (
+              <span key={b.id} className="flex items-center gap-1 shrink-0">
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundColor: b.color }}
+                />
+                <span className="text-[10px] text-white/70 whitespace-nowrap">
+                  {b.name.split(' ')[0]}
+                </span>
+                <span className="font-pixel text-[8px] text-indigo-300">
+                  {b.session}/{TOTAL_SESSIONS}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )
