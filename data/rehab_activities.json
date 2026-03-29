@@ -1,0 +1,188 @@
+{
+    "phases": {
+        "phase_I": {
+            "title": "Phase I: In-Hospital Recovery",
+            "focus": "Gentle mobilization, education, and discharge planning.",
+            "daily_schedule": [
+                {
+                    "time": "08:00",
+                    "activity": "Vital signs check & light sitting",
+                    "instructions": "Slowly transition to sitting on the edge of the bed."
+                },
+                {
+                    "time": "10:30",
+                    "activity": "Gentle morning walk (hallway)",
+                    "instructions": "Walk for 5-10 minutes with assistance or monitoring."
+                },
+                {
+                    "time": "13:00",
+                    "activity": "Medication & Nutrition Review",
+                    "instructions": "Learn about your new heart-safe diet and medications."
+                },
+                {
+                    "time": "15:00",
+                    "activity": "Afternoon Range of Motion",
+                    "instructions": "Gentle arm and leg movements to prevent stiffness."
+                },
+                {
+                    "time": "17:00",
+                    "activity": "Discharge Planning / Support Circle Call",
+                    "instructions": "Review next steps and connect with your family or volunteer."
+                }
+            ],
+            "activities": [
+                {
+                    "name": "Gentle Mobilization",
+                    "variations": [
+                        "Short walks in the hallway",
+                        "Range of motion exercises in bed"
+                    ],
+                    "instructions": "Focus on moving without strain. Monitor for any chest pain or shortness of breath.",
+                    "risks_to_avoid": [
+                        "Heavy lifting (>5 lbs)",
+                        "Rapid movements",
+                        "Overexertion"
+                    ],
+                    "benefits": [
+                        "Prevents blood clots",
+                        "Reduces hospital stay",
+                        "Boosts initial confidence"
+                    ],
+                    "stats": {
+                        "users_count": 42,
+                        "avg_progress": 95
+                    }
+                },
+                {
+                    "name": "Education & Planning",
+                    "variations": [
+                        "Medication review",
+                        "Dietary initial consultation",
+                        "Discharge instructions review"
+                    ],
+                    "instructions": "Understand your new medications and the timeline for Phase II.",
+                    "risks_to_avoid": [
+                        "Ignoring discharge warnings",
+                        "Missing follow-up appointments"
+                    ],
+                    "benefits": [
+                        "Clear roadmap to home",
+                        "Reduced anxiety about discharge"
+                    ],
+                    "stats": {
+                        "users_count": 42,
+                        "avg_progress": 98
+                    }
+                }
+            ]
+        },
+        "phase_II": {
+            "title": "Phase II: Outpatient Core",
+            "focus": "Supervised sessions (3x/week): monitored exercise, nutrition, stress management.",
+            "activities": [
+                {
+                    "name": "Monitored Exercise",
+                    "variations": [
+                        "Treadmill walking (monitored)",
+                        "Stationary cycling",
+                        "Arm ergometry",
+                        "Slow paced elliptical"
+                    ],
+                    "instructions": "Maintain your target heart rate zone. Aim for 30-45 minutes.",
+                    "risks_to_avoid": [
+                        "Sudden stops without cool-down",
+                        "Exercising in extreme temperatures"
+                    ],
+                    "benefits": [
+                        "Strengthens heart muscle",
+                        "Lowers resting blood pressure"
+                    ],
+                    "stats": {
+                        "variations_stats": [
+                            {
+                                "variation": "Treadmill walking",
+                                "users_count": 28,
+                                "avg_progress": 83
+                            },
+                            {
+                                "variation": "Stationary cycling",
+                                "users_count": 12,
+                                "avg_progress": 78
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Stress Management",
+                    "variations": [
+                        "Box breathing (4-4-4-4)",
+                        "Progressive muscle relaxation",
+                        "Guided imagery",
+                        "Mindfulness meditation"
+                    ],
+                    "instructions": "Practice daily for 10-15 minutes or during moments of high stress.",
+                    "risks_to_avoid": [
+                        "Over-scheduling",
+                        "Ignoring physical signs of stress"
+                    ],
+                    "benefits": [
+                        "Reduced cortisol levels",
+                        "Improved sleep quality"
+                    ],
+                    "stats": {
+                        "users_count": 35,
+                        "avg_progress": 88
+                    }
+                },
+                {
+                    "name": "Nutrition Coaching",
+                    "variations": [
+                        "DASH diet basics",
+                        "Low-sodium recipe swaps",
+                        "Reading nutrition labels"
+                    ],
+                    "instructions": "Focus on whole foods, lean proteins, and reducing processed salt.",
+                    "risks_to_avoid": [
+                        "Hidden sodium in canned goods",
+                        "Trans fats"
+                    ],
+                    "benefits": [
+                        "Weight management",
+                        "Improved cholesterol profile"
+                    ],
+                    "stats": {
+                        "users_count": 30,
+                        "avg_progress": 81
+                    }
+                }
+            ]
+        },
+        "phase_III": {
+            "title": "Phase III: Independent Maintenance",
+            "focus": "Patients continue on their own. Preventing drop-off is critical.",
+            "activities": [
+                {
+                    "name": "Self-Monitored Cardio",
+                    "variations": [
+                        "Brisk walking in local parks",
+                        "Swimming",
+                        "Group exercise classes"
+                    ],
+                    "instructions": "Aim for at least 30 minutes, 5 days per week.",
+                    "risks_to_avoid": [
+                        "Lack of routine",
+                        "Isolation"
+                    ],
+                    "benefits": [
+                        "Long-term cardiovascular health",
+                        "Social engagement"
+                    ],
+                    "stats": {
+                        "users_count": 15,
+                        "avg_progress": 92
+                    }
+                }
+            ]
+        }
+    }
+}

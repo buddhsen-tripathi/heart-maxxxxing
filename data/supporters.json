@@ -1,0 +1,23 @@
+[
+    {
+        "id": "s1",
+        "name": "Nurse Margaret",
+        "role": "Rehab Specialist",
+        "hospital": "Central Cardiac Center",
+        "message": "I've seen hundreds of patients reclaim their health. I'd be honored to check in on your progress each week."
+    },
+    {
+        "id": "s2",
+        "name": "Volunteer Sam",
+        "role": "Heart Health Advocate",
+        "organization": "Pulse Foundry Volunteers",
+        "message": "I went through this program 3 years ago and now I'm here to help you cross the finish line!"
+    },
+    {
+        "id": "s3",
+        "name": "Nurse David",
+        "role": "Patient Coach",
+        "hospital": "City General Hospital",
+        "message": "Consistency is everything. Let's work together to make sure you hit your session goals."
+    }
+]

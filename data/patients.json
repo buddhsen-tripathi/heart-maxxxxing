@@ -1,0 +1,170 @@
+[
+    {
+        "id": "p1",
+        "name": "John Doe",
+        "age": 58,
+        "gender": "male",
+        "height": 178,
+        "blood_pressure": "145/92",
+        "heart_rate": 78,
+        "past_diseases": [
+            "hypertension",
+            "type 2 diabetes"
+        ],
+        "status": "active",
+        "progress_percent": 15,
+        "current_session": 5,
+        "rehab_plan": {
+            "title": "Heart Recovery Path",
+            "acts": [
+                {
+                    "id": "act1",
+                    "title": "Phase I: Initial Progress",
+                    "missions_count": 6,
+                    "description": "Establishing your baseline."
+                },
+                {
+                    "id": "act2",
+                    "title": "Phase II: Increasing Strength",
+                    "missions_count": 18,
+                    "description": "Building endurance."
+                },
+                {
+                    "id": "act3",
+                    "title": "Phase III: Long-term Health",
+                    "missions_count": 12,
+                    "description": "Locking in habits."
+                }
+            ],
+            "total_sessions": 36,
+            "total_weeks": 12
+        }
+    },
+    {
+        "id": "p2",
+        "name": "Jane Smith",
+        "age": 64,
+        "gender": "female",
+        "height": 165,
+        "blood_pressure": "130/85",
+        "heart_rate": 72,
+        "past_diseases": [
+            "coronary artery disease",
+            "myocardial infarction"
+        ],
+        "status": "completed",
+        "completion_date": "2025-12-15",
+        "reviews": [
+            {
+                "place_id": "loc1",
+                "rating": "positive",
+                "comment": "The low-sodium bowls here were perfect for my Phase II diet!"
+            }
+        ],
+        "rehab_plan": {
+            "title": "The Phoenix Protocol",
+            "acts": [
+                {
+                    "id": "act1",
+                    "title": "Phase I: Rebirth",
+                    "missions_count": 8,
+                    "description": "Healing post-MI."
+                },
+                {
+                    "id": "act2",
+                    "title": "Phase II: Ascension",
+                    "missions_count": 20,
+                    "description": "Progressing to moderate intensity."
+                },
+                {
+                    "id": "act3",
+                    "title": "Phase III: Zenith",
+                    "missions_count": 8,
+                    "description": "Maintaining a heart-safe lifestyle."
+                }
+            ],
+            "total_sessions": 36,
+            "total_weeks": 12
+        }
+    },
+    {
+        "id": "p3",
+        "name": "Robert Brown",
+        "age": 72,
+        "gender": "male",
+        "height": 182,
+        "blood_pressure": "140/90",
+        "heart_rate": 65,
+        "past_diseases": [
+            "atrial fibrillation"
+        ],
+        "status": "active",
+        "progress_percent": 55,
+        "current_session": 20,
+        "rehab_plan": {
+            "title": "Steady Rhythm Saga",
+            "acts": [
+                {
+                    "id": "act1",
+                    "title": "Phase I: Calibration",
+                    "missions_count": 10,
+                    "description": "Managing AFib triggers."
+                },
+                {
+                    "id": "act2",
+                    "title": "Phase II: Harmonic Flow",
+                    "missions_count": 20,
+                    "description": "Optimizing heart efficiency."
+                },
+                {
+                    "id": "act3",
+                    "title": "Phase III: Eternal Vigor",
+                    "missions_count": 6,
+                    "description": "Sustaining vitality."
+                }
+            ],
+            "total_sessions": 36,
+            "total_weeks": 12
+        }
+    },
+    {
+        "id": "p4",
+        "name": "Sarah Connor",
+        "age": 45,
+        "gender": "female",
+        "height": 170,
+        "blood_pressure": "125/80",
+        "heart_rate": 68,
+        "past_diseases": [
+            "hypertension"
+        ],
+        "status": "active",
+        "progress_percent": 40,
+        "current_session": 14,
+        "rehab_plan": {
+            "title": "Heart Shield Protocol",
+            "acts": [
+                {
+                    "id": "act1",
+                    "title": "Phase I: Fortress",
+                    "missions_count": 6,
+                    "description": "Foundational safety."
+                },
+                {
+                    "id": "act2",
+                    "title": "Phase II: Expansion",
+                    "missions_count": 20,
+                    "description": "Active capacity."
+                },
+                {
+                    "id": "act3",
+                    "title": "Phase III: Sentinel",
+                    "missions_count": 10,
+                    "description": "Forever monitoring."
+                }
+            ],
+            "total_sessions": 36,
+            "total_weeks": 12
+        }
+    }
+]
