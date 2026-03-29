@@ -1,1 +1,452 @@
 @import "tailwindcss";
+
+/* ===== Pixel Font ===== */
+.font-pixel {
+  font-family: "Press Start 2P", monospace;
+}
+
+/* ===== NES Mario Palette ===== */
+:root {
+  --mario-sky: #6b88ff;
+  --mario-ground-light: #e09050;
+  --mario-ground-dark: #a0501c;
+  --mario-ground-mortar: #d08040;
+  --mario-brick-light: #d88040;
+  --mario-brick-dark: #a04000;
+  --mario-brick-mortar: #e8a060;
+  --mario-green-light: #80d010;
+  --mario-green-mid: #00a800;
+  --mario-green-dark: #005800;
+  --mario-pipe-light: #80d010;
+  --mario-pipe-mid: #00a800;
+  --mario-pipe-dark: #005800;
+  --mario-question-bg: #e09050;
+  --mario-question-border: #a04000;
+  --mario-question-shine: #fcd890;
+  --mario-question-mark: #d88040;
+}
+
+/* ===== Game Level ===== */
+.game-viewport {
+  overflow: hidden;
+  position: relative;
+  background-color: var(--mario-sky);
+}
+
+.game-world {
+  display: flex;
+  align-items: flex-end;
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+
+/* ===== Ground Block — NES brick pattern ===== */
+.ground-block {
+  width: 80px;
+  min-width: 80px;
+  height: 48px;
+  position: relative;
+  image-rendering: pixelated;
+  overflow: hidden;
+}
+
+/* Brick pattern via repeating gradient — two rows of offset bricks */
+.ground-block-inner {
+  width: 100%;
+  height: 100%;
+  background:
+    /* mortar color base */
+    var(--mario-ground-dark);
+  background-image:
+    /* Horizontal mortar lines */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 22px,
+      var(--mario-ground-dark) 22px,
+      var(--mario-ground-dark) 24px
+    ),
+    /* Vertical mortar lines — row 1 (offset) */
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 38px,
+      var(--mario-ground-dark) 38px,
+      var(--mario-ground-dark) 40px
+    );
+  background-color: var(--mario-ground-light);
+  border-bottom: 2px solid #803810;
+}
+
+/* ===== ? Brick Block — Classic NES style ===== */
+.brick {
+  width: 48px;
+  height: 48px;
+  background-color: var(--mario-question-bg);
+  border: 4px solid var(--mario-question-border);
+  border-top-color: var(--mario-question-shine);
+  border-left-color: var(--mario-question-shine);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: 18px;
+  color: var(--mario-question-border);
+  cursor: pointer;
+  position: relative;
+  image-rendering: pixelated;
+  box-shadow:
+    inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+    inset -4px -4px 0px rgba(0, 0, 0, 0.15);
+}
+
+/* Shine dot top-left */
+.brick::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 6px;
+  height: 6px;
+  background: var(--mario-question-shine);
+  border-radius: 1px;
+}
+
+/* Shadow dot bottom-right */
+.brick::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  background: var(--mario-question-border);
+  border-radius: 1px;
+}
+
+.brick.locked {
+  background-color: #888;
+  border-color: #555;
+  border-top-color: #aaa;
+  border-left-color: #aaa;
+  color: #666;
+  cursor: default;
+  box-shadow:
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1),
+    inset -4px -4px 0px rgba(0, 0, 0, 0.1);
+}
+
+.brick.locked::before {
+  background: #aaa;
+}
+
+.brick.locked::after {
+  background: #555;
+}
+
+.brick.opened {
+  background-color: #704020;
+  border-color: #402010;
+  border-top-color: #905830;
+  border-left-color: #905830;
+  color: #603018;
+  cursor: default;
+  box-shadow:
+    inset 4px 4px 0px rgba(255, 255, 255, 0.05),
+    inset -4px -4px 0px rgba(0, 0, 0, 0.2);
+}
+
+.brick.opened::before {
+  background: #905830;
+}
+
+.brick.opened::after {
+  background: #402010;
+}
+
+.brick.ready {
+  animation: brick-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes brick-glow {
+  0%, 100% {
+    filter: brightness(1);
+    box-shadow:
+      inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+      inset -4px -4px 0px rgba(0, 0, 0, 0.15),
+      0 0 10px rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    filter: brightness(1.15);
+    box-shadow:
+      inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+      inset -4px -4px 0px rgba(0, 0, 0, 0.15),
+      0 0 20px rgba(251, 191, 36, 0.6);
+  }
+}
+
+@keyframes brick-bump {
+  0% { transform: translateY(0); }
+  20% { transform: translateY(-18px) scale(1.05); }
+  40% { transform: translateY(-4px); }
+  60% { transform: translateY(-8px); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.brick-bumping {
+  animation: brick-bump 0.35s ease-out;
+}
+
+/* ===== Mario Jump 1 — hits brick from below ===== */
+@keyframes mario-jump-hit {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-195px); }   /* head reaches brick bottom */
+  48% { transform: translateY(-200px); }   /* impact! head pushes into brick */
+  56% { transform: translateY(-190px); }   /* bounce back down slightly */
+  100% { transform: translateY(0); }        /* land */
+}
+
+.mario-jumping {
+  animation: mario-jump-hit 0.7s cubic-bezier(0.2, 0, 0.4, 1);
+}
+
+/* ===== Mario Jump 2 — grabs powerup ===== */
+@keyframes mario-jump-grab {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-260px); }   /* higher — grab the floating powerup */
+  50% { transform: translateY(-265px); }   /* peak */
+  100% { transform: translateY(0); }        /* land */
+}
+
+.mario-jumping-grab {
+  animation: mario-jump-grab 0.75s cubic-bezier(0.2, 0, 0.4, 1);
+}
+
+/* ===== Powerup Pop — item rises out of brick top, then floats ===== */
+@keyframes powerup-pop {
+  0% { transform: translateY(0) scale(0.2); opacity: 0; }
+  15% { transform: translateY(-10px) scale(1.3); opacity: 1; }
+  40% { transform: translateY(-45px) scale(1); opacity: 1; }
+  100% { transform: translateY(-55px) scale(1); opacity: 1; }
+}
+
+.powerup-popping {
+  animation: powerup-pop 0.5s ease-out forwards;
+  pointer-events: none;
+}
+
+/* Powerup grabbed — shrinks into Mario */
+@keyframes powerup-grab {
+  0% { transform: translateY(-55px) scale(1); opacity: 1; }
+  50% { transform: translateY(-55px) scale(1.3); opacity: 1; }
+  100% { transform: translateY(80px) scale(0); opacity: 0; }
+}
+
+.powerup-grabbed {
+  animation: powerup-grab 0.4s ease-in forwards;
+  pointer-events: none;
+}
+
+/* ===== Character ===== */
+.character {
+  position: absolute;
+  transition: left 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: left;
+  z-index: 10;
+}
+
+.character-idle {
+  animation: bounce-idle 1.2s ease-in-out infinite;
+}
+
+@keyframes bounce-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.character-walking {
+  animation: walk-bob 0.2s ease-in-out infinite;
+}
+
+@keyframes walk-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* Sprite frame toggle — two frames alternate */
+@keyframes sprite-toggle {
+  0%, 49.9% { visibility: visible; }
+  50%, 100% { visibility: hidden; }
+}
+
+@keyframes sprite-toggle-alt {
+  0%, 49.9% { visibility: hidden; }
+  50%, 100% { visibility: visible; }
+}
+
+.sprite-frame-1 {
+  animation: sprite-toggle 0.2s steps(1) infinite;
+}
+
+.sprite-frame-2 {
+  animation: sprite-toggle-alt 0.2s steps(1) infinite;
+}
+
+/* ===== Mario Hop — arc over pipes during walk ===== */
+/* Wide plateau: Mario stays elevated for ~70% of the walk */
+@keyframes mario-hop-pipe {
+  0% { transform: translateY(0); }
+  12% { transform: translateY(-105px); }
+  88% { transform: translateY(-105px); }
+  100% { transform: translateY(0); }
+}
+
+.mario-hopping {
+  animation: mario-hop-pipe 0.9s ease-in-out;
+}
+
+/* Dust puff when Mario starts moving */
+@keyframes dust-puff {
+  0% { transform: scale(0.3); opacity: 0.8; }
+  100% { transform: scale(1.5) translateX(-20px); opacity: 0; }
+}
+
+.dust-puff {
+  animation: dust-puff 0.4s ease-out forwards;
+}
+
+/* ===== Cloud — NES style ===== */
+@keyframes float-cloud {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-120px); }
+}
+
+.cloud {
+  animation: float-cloud 60s linear infinite;
+}
+
+/* ===== NES Pipe ===== */
+.pipe-top {
+  width: 64px;
+  height: 24px;
+  background: linear-gradient(
+    90deg,
+    var(--mario-pipe-dark) 0%,
+    var(--mario-pipe-dark) 8%,
+    var(--mario-pipe-mid) 8%,
+    var(--mario-pipe-mid) 20%,
+    var(--mario-pipe-light) 20%,
+    var(--mario-pipe-light) 50%,
+    var(--mario-pipe-mid) 50%,
+    var(--mario-pipe-mid) 80%,
+    var(--mario-pipe-dark) 80%,
+    var(--mario-pipe-dark) 100%
+  );
+  border: 3px solid var(--mario-pipe-dark);
+  border-radius: 3px 3px 0 0;
+  margin-left: -4px;
+}
+
+.pipe-body {
+  width: 56px;
+  height: 60px;
+  background: linear-gradient(
+    90deg,
+    var(--mario-pipe-dark) 0%,
+    var(--mario-pipe-dark) 10%,
+    var(--mario-pipe-mid) 10%,
+    var(--mario-pipe-mid) 25%,
+    var(--mario-pipe-light) 25%,
+    var(--mario-pipe-light) 55%,
+    var(--mario-pipe-mid) 55%,
+    var(--mario-pipe-mid) 85%,
+    var(--mario-pipe-dark) 85%,
+    var(--mario-pipe-dark) 100%
+  );
+  border-left: 3px solid var(--mario-pipe-dark);
+  border-right: 3px solid var(--mario-pipe-dark);
+}
+
+/* ===== Heart Fill ===== */
+@keyframes heart-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.heart-new {
+  animation: heart-pulse 0.5s ease-out;
+}
+
+/* ===== Powerup Modal ===== */
+@keyframes modal-in {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.modal-enter {
+  animation: modal-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ===== Storm ===== */
+@keyframes rain-fall {
+  0% { transform: translateY(-10px); opacity: 0; }
+  50% { opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+.raindrop {
+  animation: rain-fall 1.2s linear infinite;
+}
+
+/* ===== Fireworks ===== */
+@keyframes firework {
+  0% { transform: translateY(0) scale(0); opacity: 1; }
+  50% { transform: translateY(-100px) scale(1); opacity: 1; }
+  100% { transform: translateY(-160px) scale(0.5); opacity: 0; }
+}
+
+.firework {
+  animation: firework 1.5s ease-out infinite;
+}
+
+/* ===== Chat ===== */
+@keyframes drop-in {
+  0% { opacity: 0; transform: translateY(-12px) scale(0.95); transform-origin: top right; }
+  100% { opacity: 1; transform: translateY(0) scale(1); transform-origin: top right; }
+}
+
+.chat-panel-enter {
+  animation: drop-in 0.25s ease-out;
+}
+
+/* ===== Floating Hearts (welcome screen) ===== */
+@keyframes float-up {
+  0% { transform: translateY(0) scale(1); opacity: 0.7; }
+  100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
+}
+
+.floating-heart {
+  animation: float-up var(--duration, 6s) ease-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+/* ===== Scrollbar Hide ===== */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ===== Sun break ===== */
+@keyframes sun-break {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.sun-break {
+  animation: sun-break 1s ease-out;
+}
