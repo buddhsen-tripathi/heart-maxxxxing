@@ -1,0 +1,35 @@
+[
+    {
+        "id": "loc1",
+        "name": "Green Leaf Kitchen",
+        "type": "Nutritious Restaurant",
+        "coordinates": {
+            "lat": 40.7128,
+            "lng": -74.0060
+        },
+        "specialty": "Low-sodium, heart-healthy bowls",
+        "address": "123 Health Ave, NYC"
+    },
+    {
+        "id": "loc2",
+        "name": "Central Park Wellness Trail",
+        "type": "Walking Path",
+        "coordinates": {
+            "lat": 40.7851,
+            "lng": -73.9683
+        },
+        "specialty": "Scenic, flat route for easy cardio",
+        "address": "Central Park, NYC"
+    },
+    {
+        "id": "loc3",
+        "name": "Omega Grill",
+        "type": "Nutritious Restaurant",
+        "coordinates": {
+            "lat": 40.7306,
+            "lng": -73.9352
+        },
+        "specialty": "Salmon and Mediterranean salads",
+        "address": "456 Mediterranean Blvd, NYC"
+    }
+]
