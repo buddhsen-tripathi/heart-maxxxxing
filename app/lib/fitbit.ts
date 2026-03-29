@@ -173,26 +173,28 @@ function avgLast(values: number[], n: number): number | undefined {
 export async function fetchHealthTrends(
   accessToken: string,
   programStartDate?: string,
+  programEndDate?: string,
 ): Promise<HealthTrends> {
   const now = Date.now()
 
-  // Always query at least 30 days of data so we have context even on day 1
-  // Use programStartDate for baseline calculations, but fetch wider window
   const programStart = programStartDate
     ? new Date(programStartDate).getTime()
-    : now - 84 * DAY_MS
-  const dataStart = Math.min(programStart, now - 30 * DAY_MS) // at least 30 days
-  const programDays = Math.max(1, Math.floor((now - programStart) / DAY_MS))
+    : new Date('2025-11-01').getTime()
+  const dataStart = programStart
+  const dataEnd = programEndDate
+    ? new Date(programEndDate).getTime()
+    : now
+  const programDays = Math.max(1, Math.floor((dataEnd - programStart) / DAY_MS))
 
-  console.log(`[GFit] Fetching data from ${new Date(dataStart).toISOString()} to now (program day ${programDays})`)
+  console.log(`[GFit] Fetching data from ${new Date(dataStart).toISOString()} to ${new Date(dataEnd).toISOString()} (program day ${programDays})`)
 
   const [stepsRes, hrRes, activeMinsRes, distRes, sleepRes, profileRes] =
     await Promise.allSettled([
-      aggregate(accessToken, 'com.google.step_count.delta', dataStart, now, DAY_MS),
-      aggregate(accessToken, 'com.google.heart_rate.bpm', dataStart, now, DAY_MS),
-      aggregate(accessToken, 'com.google.active_minutes', dataStart, now, DAY_MS),
-      aggregate(accessToken, 'com.google.distance.delta', dataStart, now, DAY_MS),
-      aggregate(accessToken, 'com.google.sleep.segment', now - DAY_MS, now, DAY_MS * 2),
+      aggregate(accessToken, 'com.google.step_count.delta', dataStart, dataEnd, DAY_MS),
+      aggregate(accessToken, 'com.google.heart_rate.bpm', dataStart, dataEnd, DAY_MS),
+      aggregate(accessToken, 'com.google.active_minutes', dataStart, dataEnd, DAY_MS),
+      aggregate(accessToken, 'com.google.distance.delta', dataStart, dataEnd, DAY_MS),
+      aggregate(accessToken, 'com.google.sleep.segment', dataEnd - DAY_MS, dataEnd, DAY_MS * 2),
       fetch(GOOGLE_USERINFO_URL, {
         headers: { Authorization: `Bearer ${accessToken}` },
       }).then((r) => (r.ok ? r.json() : null)),

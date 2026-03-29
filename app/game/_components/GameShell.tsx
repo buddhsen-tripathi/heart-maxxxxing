@@ -10,6 +10,7 @@ import {
   hasBrickAt,
   daysSinceLastSession,
   TOTAL_SESSIONS,
+  getCurrentAct,
 } from '../../lib/game-state'
 import { getPowerup, getPowerupMeta, type Powerup } from '../../lib/powerups'
 import type { HealthTrends } from '../../lib/fitbit'
@@ -58,14 +59,22 @@ export default function GameShell() {
   }, [])
 
   // Fetch health trends once state is loaded and connected
-  // Simulates program timeline: 3 sessions/week, so session 9 = 3 weeks ago, session 36 = 12 weeks ago
+  // Program starts Nov 1 2025, 3 sessions/week with 2-3-2 day gaps
+  // Session 1: Nov 1, Session 2: Nov 3, Session 3: Nov 6, Session 4: Nov 8, ...
   useEffect(() => {
     if (!gfitConnected || !state) return
 
-    const weeksElapsed = state.currentSession / 3
-    const virtualStartMs = Date.now() - weeksElapsed * 7 * 24 * 60 * 60 * 1000
-    const startDate = new Date(virtualStartMs).toISOString()
-    const url = `/api/fitbit/data?startDate=${encodeURIComponent(startDate)}`
+    const PROGRAM_START = new Date('2025-11-01').getTime()
+    const DAY = 24 * 60 * 60 * 1000
+    // 2-3-2-2-3-2 repeating pattern (days between sessions)
+    const GAP_PATTERN = [2, 3, 2]
+    let dayOffset = 0
+    for (let i = 1; i < state.currentSession; i++) {
+      dayOffset += GAP_PATTERN[(i - 1) % 3]
+    }
+    const virtualNow = PROGRAM_START + dayOffset * DAY
+    const startDate = new Date(PROGRAM_START).toISOString()
+    const url = `/api/fitbit/data?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(new Date(virtualNow).toISOString())}`
 
     fetch(url)
       .then(async (res) => {
@@ -170,6 +179,14 @@ export default function GameShell() {
             type: meta.type,
             progress,
             health,
+            patientProfile: gameState.profile ? {
+              age: gameState.profile.age,
+              gender: gameState.profile.gender,
+              bloodPressure: gameState.profile.bloodPressure,
+              restingHeartRate: gameState.profile.restingHeartRate,
+              pastDiseases: gameState.profile.pastDiseases,
+              rehabPhase: getCurrentAct(session, gameState.profile.rehabPlan)?.title,
+            } : undefined,
           }),
         })
 

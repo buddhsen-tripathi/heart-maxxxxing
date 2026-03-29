@@ -50,13 +50,21 @@ interface HealthContext {
 }
 
 export async function POST(req: Request) {
-  const { session, goal, playerName, type, progress, health } = (await req.json()) as {
+  const { session, goal, playerName, type, progress, health, patientProfile } = (await req.json()) as {
     session: number
     goal: string
     playerName: string
     type: PowerupType
     progress: number
     health?: HealthContext
+    patientProfile?: {
+      age: number
+      gender: string
+      bloodPressure: string
+      restingHeartRate: number
+      pastDiseases: string[]
+      rehabPhase?: string
+    }
   }
 
   const typePrompt = TYPE_PROMPTS[type] || TYPE_PROMPTS['health-tip']
@@ -86,9 +94,9 @@ You write short, personalized reward messages that appear when a patient hits a 
 Keep messages concise — max 3 sentences. No markdown formatting. Use plain text only.
 Be warm, specific, and encouraging. Never use medical jargon.
 When real health data is provided, ALWAYS reference specific numbers and improvements — this is what makes the message powerful.`,
-    prompt: `Patient: ${playerName}
+    prompt: `Patient: ${playerName}${patientProfile ? ` (${patientProfile.age}yo ${patientProfile.gender}, BP ${patientProfile.bloodPressure}, resting HR ${patientProfile.restingHeartRate} BPM, conditions: ${patientProfile.pastDiseases.join(', ') || 'none'})` : ''}
 Personal Goal: "${goal}"
-Sessions completed: ${session} of 36 (${progress}% done)
+Sessions completed: ${session} of 36 (${progress}% done)${patientProfile?.rehabPhase ? `\nCurrent rehab phase: ${patientProfile.rehabPhase}` : ''}
 Reward type: ${type}
 
 ${typePrompt}${healthPrompt}`,

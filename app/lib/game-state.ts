@@ -1,3 +1,27 @@
+export interface RehabAct {
+  id: string
+  title: string
+  missionsCount: number
+  description: string
+}
+
+export interface RehabPlan {
+  title: string
+  acts: RehabAct[]
+  totalSessions: number
+  totalWeeks: number
+}
+
+export interface PatientProfile {
+  age: number
+  gender: string
+  height: number
+  bloodPressure: string
+  restingHeartRate: number
+  pastDiseases: string[]
+  rehabPlan: RehabPlan
+}
+
 export interface GameState {
   playerName: string
   goal: string
@@ -6,9 +30,29 @@ export interface GameState {
   lastSessionDate: string | null
   viewedPowerups: number[]
   startDate: string | null
+  profile: PatientProfile
 }
 
 const STORAGE_KEY = 'heart-maxxxxing-state'
+
+export const DEFAULT_PROFILE: PatientProfile = {
+  age: 58,
+  gender: 'male',
+  height: 178,
+  bloodPressure: '145/92',
+  restingHeartRate: 78,
+  pastDiseases: ['hypertension', 'type 2 diabetes'],
+  rehabPlan: {
+    title: 'Heart Recovery Path',
+    acts: [
+      { id: 'act1', title: 'Phase I: Initial Progress', missionsCount: 6, description: 'Establishing your baseline.' },
+      { id: 'act2', title: 'Phase II: Increasing Strength', missionsCount: 18, description: 'Building endurance.' },
+      { id: 'act3', title: 'Phase III: Long-term Health', missionsCount: 12, description: 'Locking in habits.' },
+    ],
+    totalSessions: 36,
+    totalWeeks: 12,
+  },
+}
 
 export const DEFAULT_STATE: GameState = {
   playerName: '',
@@ -18,6 +62,17 @@ export const DEFAULT_STATE: GameState = {
   lastSessionDate: null,
   viewedPowerups: [],
   startDate: null,
+  profile: DEFAULT_PROFILE,
+}
+
+/** Get which rehab act/phase the patient is currently in */
+export function getCurrentAct(session: number, plan: RehabPlan): RehabAct | null {
+  let cumulative = 0
+  for (const act of plan.acts) {
+    cumulative += act.missionsCount
+    if (session <= cumulative) return act
+  }
+  return plan.acts[plan.acts.length - 1]
 }
 
 export function saveState(state: GameState): void {

@@ -1,4 +1,4 @@
-import { type GameState, getHearts, daysSinceLastSession, TOTAL_SESSIONS } from './game-state'
+import { type GameState, getHearts, daysSinceLastSession, getCurrentAct, TOTAL_SESSIONS } from './game-state'
 import type { HealthTrends } from './fitbit'
 
 export function buildCoachPrompt(state: GameState, trends?: HealthTrends): string {
@@ -6,6 +6,8 @@ export function buildCoachPrompt(state: GameState, trends?: HealthTrends): strin
   const daysSince = daysSinceLastSession(state)
   const progress = Math.round((state.currentSession / TOTAL_SESSIONS) * 100)
   const name = state.playerName || 'Friend'
+  const p = state.profile
+  const currentAct = getCurrentAct(state.currentSession, p.rehabPlan)
 
   // Phase-based tone shifts
   let phase: string
@@ -81,11 +83,25 @@ You're warm but real. You don't do fake positivity. If something is hard, you sa
 
 <your_patient>
 Name: ${name}
+Age: ${p.age}, Gender: ${p.gender}, Height: ${p.height}cm
+Blood Pressure: ${p.bloodPressure}
+Resting Heart Rate: ${p.restingHeartRate} BPM
+Conditions: ${p.pastDiseases.length > 0 ? p.pastDiseases.join(', ') : 'none reported'}
 Goal: "${state.goal || 'Complete cardiac rehabilitation'}"
 Sessions: ${state.currentSession} of ${TOTAL_SESSIONS} (${progress}%)
+Current Phase: ${currentAct ? `${currentAct.title} — ${currentAct.description}` : 'Not started'}
 Hearts: ${hearts}
 Phase: ${phase}
+Rehab Plan: ${p.rehabPlan.title} (${p.rehabPlan.totalWeeks} weeks, ${p.rehabPlan.totalSessions} sessions)
 </your_patient>
+
+<medical_awareness>
+You know ${name}'s medical background but you are NOT their doctor. Use this knowledge to:
+- Be sensitive to their conditions (e.g. a diabetic patient may have energy fluctuations)
+- Understand why certain exercises or goals are relevant to their specific health situation
+- Empathize with the complexity of managing multiple conditions
+- NEVER adjust their exercise plan, medication, or give treatment advice based on this info
+</medical_awareness>
 
 <phase_guidance>
 ${phaseGuidance[phase]}

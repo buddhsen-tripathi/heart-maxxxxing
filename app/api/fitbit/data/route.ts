@@ -21,12 +21,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
   }
 
-  // Read optional startDate from query
+  // Read optional startDate/endDate from query
   const { searchParams } = new URL(request.url)
   const startDate = searchParams.get('startDate') || undefined
+  const endDate = searchParams.get('endDate') || undefined
 
   try {
-    const data = await fetchHealthTrends(tokens.access_token, startDate)
+    const data = await fetchHealthTrends(tokens.access_token, startDate, endDate)
     return NextResponse.json(data)
   } catch (err) {
     console.error('[GFit API] First attempt failed:', err instanceof Error ? err.message : err)
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
     try {
       const newTokens = await refreshAccessToken(tokens.refresh_token)
       const merged = { ...tokens, ...newTokens }
-      const data = await fetchHealthTrends(merged.access_token, startDate)
+      const data = await fetchHealthTrends(merged.access_token, startDate, endDate)
 
       const response = NextResponse.json(data)
       response.cookies.set('gfit_tokens', JSON.stringify(merged), {
