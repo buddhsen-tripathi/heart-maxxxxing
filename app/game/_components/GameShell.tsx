@@ -42,6 +42,7 @@ export default function GameShell() {
   const [showConnectModal, setShowConnectModal] = useState(false)
   const [musicPlaying, setMusicPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const powerupCacheRef = useRef<Map<number, string>>(new Map())
 
   // Load state on mount
   useEffect(() => {
@@ -159,36 +160,45 @@ export default function GameShell() {
     }, 1000)
   }, [state, isWalking])
 
-  /** Fetch personalized powerup content from LLM, fall back to static */
-  const fetchPersonalizedPowerup = useCallback(
-    async (session: number, gameState: GameState) => {
+  /** Build health context for powerup API */
+  const buildHealthContext = useCallback(() => {
+    if (!healthTrends) return undefined
+    return {
+      restingHR: healthTrends.current.restingHR,
+      baselineHR: healthTrends.baseline.avgRestingHR,
+      deltaHR: healthTrends.deltas.restingHR,
+      stepsToday: healthTrends.current.stepsToday,
+      deltaSteps: healthTrends.deltas.dailySteps,
+      totalSteps: healthTrends.totals.totalSteps,
+      activeMinutes: healthTrends.current.activeMinutes,
+      deltaActiveMinutes: healthTrends.deltas.activeMinutes,
+      totalDistance: (healthTrends.totals as Record<string, unknown>).totalDistance as number | undefined,
+      programDays: healthTrends.totals.programDays,
+    }
+  }, [healthTrends])
+
+  /** Build patient profile for powerup API */
+  const buildPatientProfile = useCallback((session: number, gameState: GameState) => {
+    if (!gameState.profile) return undefined
+    return {
+      age: gameState.profile.age,
+      gender: gameState.profile.gender,
+      bloodPressure: gameState.profile.bloodPressure,
+      restingHeartRate: gameState.profile.restingHeartRate,
+      pastDiseases: gameState.profile.pastDiseases,
+      rehabPhase: getCurrentAct(session, gameState.profile.rehabPlan)?.title,
+    }
+  }, [])
+
+  /** Fetch powerup content from LLM (returns content string, doesn't touch UI) */
+  const fetchPowerupContent = useCallback(
+    async (session: number, gameState: GameState): Promise<string | null> => {
       const meta = getPowerupMeta(session)
       if (!meta) return null
 
-      const fallback = getPowerup(session, gameState.goal)
       const progress = Math.round((session / TOTAL_SESSIONS) * 100)
 
-      // Show skeleton immediately (loading state)
-      const skeleton: Powerup = { ...meta, content: '' }
-      setActivePowerup(skeleton)
-      setPowerupLoading(true)
-
       try {
-        const health = healthTrends
-          ? {
-              restingHR: healthTrends.current.restingHR,
-              baselineHR: healthTrends.baseline.avgRestingHR,
-              deltaHR: healthTrends.deltas.restingHR,
-              stepsToday: healthTrends.current.stepsToday,
-              deltaSteps: healthTrends.deltas.dailySteps,
-              totalSteps: healthTrends.totals.totalSteps,
-              activeMinutes: healthTrends.current.activeMinutes,
-              deltaActiveMinutes: healthTrends.deltas.activeMinutes,
-              totalDistance: (healthTrends.totals as Record<string, unknown>).totalDistance as number | undefined,
-              programDays: healthTrends.totals.programDays,
-            }
-          : undefined
-
         const res = await fetch('/api/powerup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -198,30 +208,98 @@ export default function GameShell() {
             playerName: gameState.playerName,
             type: meta.type,
             progress,
-            health,
-            patientProfile: gameState.profile ? {
-              age: gameState.profile.age,
-              gender: gameState.profile.gender,
-              bloodPressure: gameState.profile.bloodPressure,
-              restingHeartRate: gameState.profile.restingHeartRate,
-              pastDiseases: gameState.profile.pastDiseases,
-              rehabPhase: getCurrentAct(session, gameState.profile.rehabPlan)?.title,
-            } : undefined,
+            health: buildHealthContext(),
+            patientProfile: buildPatientProfile(session, gameState),
           }),
         })
 
         if (!res.ok) throw new Error('API error')
         const { content } = await res.json()
-        setActivePowerup({ ...meta, content })
+        return content
+      } catch {
+        return null
+      }
+    },
+    [buildHealthContext, buildPatientProfile],
+  )
+
+  /** Next brick session from a given session */
+  function nextBrickSession(current: number): number | null {
+    const next = current + (3 - (current % 3 || 3))
+    return next > 0 && next <= TOTAL_SESSIONS ? next : null
+  }
+
+  /** Preload the next powerup in the background */
+  const preloadNextPowerup = useCallback(
+    (fromSession: number, gameState: GameState) => {
+      const next = nextBrickSession(fromSession + 1)
+      if (!next || powerupCacheRef.current.has(next)) return
+
+      console.log(`[Preload] Fetching reward for session ${next}`)
+      fetchPowerupContent(next, gameState).then((content) => {
+        if (content) {
+          powerupCacheRef.current.set(next, content)
+          console.log(`[Preload] Session ${next} ready`)
+        }
+      })
+    },
+    [fetchPowerupContent],
+  )
+
+  // Preload first upcoming powerup on mount + when session changes
+  useEffect(() => {
+    if (!state) return
+    const next = nextBrickSession(state.currentSession + 1)
+    if (next && !powerupCacheRef.current.has(next)) {
+      preloadNextPowerup(state.currentSession, state)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.currentSession, state?.playerName, preloadNextPowerup])
+
+  /** Show powerup — uses cache if available, falls back to live fetch */
+  const fetchPersonalizedPowerup = useCallback(
+    async (session: number, gameState: GameState) => {
+      const meta = getPowerupMeta(session)
+      if (!meta) return null
+
+      const fallback = getPowerup(session, gameState.goal)
+
+      // Check cache first
+      const cached = powerupCacheRef.current.get(session)
+      if (cached) {
+        console.log(`[Preload] Cache hit for session ${session}`)
+        powerupCacheRef.current.delete(session)
+        setActivePowerup({ ...meta, content: cached })
+        setPowerupLoading(false)
+
+        // Preload the one after this
+        preloadNextPowerup(session, gameState)
+        return meta
+      }
+
+      // No cache — show skeleton and fetch live
+      const skeleton: Powerup = { ...meta, content: '' }
+      setActivePowerup(skeleton)
+      setPowerupLoading(true)
+
+      try {
+        const content = await fetchPowerupContent(session, gameState)
+        if (content) {
+          setActivePowerup({ ...meta, content })
+        } else if (fallback) {
+          setActivePowerup(fallback)
+        }
       } catch {
         if (fallback) setActivePowerup(fallback)
       } finally {
         setPowerupLoading(false)
       }
 
+      // Preload the one after this
+      preloadNextPowerup(session, gameState)
       return meta
     },
-    [healthTrends],
+    [fetchPowerupContent, preloadNextPowerup],
   )
 
   /** Two-jump brick punch: jump1 hits brick → powerup pops → jump2 grabs it → modal */
