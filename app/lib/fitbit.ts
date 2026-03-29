@@ -12,6 +12,20 @@ export interface FitbitTokens {
   user_id?: string
 }
 
+export interface HRZones {
+  outOfRange: number  // minutes
+  fatBurn: number
+  cardio: number
+  peak: number
+}
+
+export interface SleepStages {
+  deep: number    // minutes
+  light: number
+  rem: number
+  wake: number
+}
+
 export interface HealthTrends {
   current: {
     restingHR?: number
@@ -19,20 +33,26 @@ export interface HealthTrends {
     avgDailySteps?: number
     activeMinutes?: number
     sleepMinutes?: number
+    hrZones?: HRZones
+    sleepStages?: SleepStages
+    hrv?: number  // daily HRV (rmssd)
   }
   baseline: {
     avgRestingHR?: number
     avgDailySteps?: number
     avgActiveMinutes?: number
+    avgHRV?: number
   }
   deltas: {
     restingHR?: number
     dailySteps?: number
     activeMinutes?: number
+    hrv?: number
   }
   totals: {
     totalSteps?: number
     totalActiveMinutes?: number
+    totalCardioMinutes?: number
     programDays?: number
   }
   profile?: { name: string; picture: string }
@@ -131,12 +151,8 @@ export async function fetchHealthTrends(
   programStartDate?: string,
   programEndDate?: string,
 ): Promise<HealthTrends> {
-  const startDate = programStartDate
-    ? toDateStr(programStartDate)
-    : '2025-11-01'
-  const endDate = programEndDate
-    ? toDateStr(programEndDate)
-    : toDateStr(new Date())
+  const startDate = programStartDate ? toDateStr(programStartDate) : '2025-11-01'
+  const endDate = programEndDate ? toDateStr(programEndDate) : toDateStr(new Date())
 
   const startMs = new Date(startDate).getTime()
   const endMs = new Date(endDate).getTime()
@@ -145,15 +161,18 @@ export async function fetchHealthTrends(
 
   console.log(`[Fitbit] Fetching ${startDate} to ${endDate} (program day ${programDays})`)
 
-  const [stepsRes, hrRes, fairlyActiveRes, veryActiveRes, sleepRes, profileRes] =
-    await Promise.allSettled([
-      fitbitGet(`/1/user/-/activities/steps/date/${startDate}/${endDate}.json`, accessToken),
-      fitbitGet(`/1/user/-/activities/heart/date/${startDate}/${endDate}.json`, accessToken),
-      fitbitGet(`/1/user/-/activities/minutesFairlyActive/date/${startDate}/${endDate}.json`, accessToken),
-      fitbitGet(`/1/user/-/activities/minutesVeryActive/date/${startDate}/${endDate}.json`, accessToken),
-      fitbitGet(`/1.2/user/-/sleep/date/${endDate}/${endDate}.json`, accessToken),
-      fitbitGet('/1/user/-/profile.json', accessToken),
-    ])
+  const [
+    stepsRes, hrRes, fairlyActiveRes, veryActiveRes,
+    sleepRes, hrvRes, profileRes,
+  ] = await Promise.allSettled([
+    fitbitGet(`/1/user/-/activities/steps/date/${startDate}/${endDate}.json`, accessToken),
+    fitbitGet(`/1/user/-/activities/heart/date/${startDate}/${endDate}.json`, accessToken),
+    fitbitGet(`/1/user/-/activities/minutesFairlyActive/date/${startDate}/${endDate}.json`, accessToken),
+    fitbitGet(`/1/user/-/activities/minutesVeryActive/date/${startDate}/${endDate}.json`, accessToken),
+    fitbitGet(`/1.2/user/-/sleep/date/${endDate}/${endDate}.json`, accessToken),
+    fitbitGet(`/1/user/-/hrv/date/${startDate}/${endDate}.json`, accessToken),
+    fitbitGet('/1/user/-/profile.json', accessToken),
+  ])
 
   // ── Steps ──
   let stepsToday: number | undefined
@@ -171,18 +190,52 @@ export async function fetchHealthTrends(
     avgDailyStepsCurrent = avgLast(days, 7)
   }
 
-  // ── Heart Rate ──
+  // ── Heart Rate + Zones ──
   let currentRestingHR: number | undefined
   let baselineRestingHR: number | undefined
+  let hrZones: HRZones | undefined
+  let totalCardioMinutes = 0
 
   if (hrRes.status === 'fulfilled') {
     const entries = hrRes.value['activities-heart'] || []
+
+    // Resting HR per day
     const dailyRHR = entries
       .map((e: { value: { restingHeartRate?: number } }) => e.value?.restingHeartRate || 0)
       .filter((v: number) => v > 0)
-    console.log(`[Fitbit] Resting HR: ${dailyRHR.length} days with data, sample: ${dailyRHR.slice(0, 3).join(', ')}`)
+    console.log(`[Fitbit] Resting HR: ${dailyRHR.length} days, sample: ${dailyRHR.slice(0, 3).join(', ')}`)
     baselineRestingHR = avgFirst(dailyRHR, 7)
     currentRestingHR = avgLast(dailyRHR, 7)
+
+    // HR Zones — latest day with data
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const zones = entries[i].value?.heartRateZones
+      if (zones && zones.length > 0) {
+        const zoneMap: Record<string, number> = {}
+        for (const z of zones) {
+          zoneMap[z.name] = z.minutes || 0
+        }
+        hrZones = {
+          outOfRange: zoneMap['Out of Range'] || 0,
+          fatBurn: zoneMap['Fat Burn'] || 0,
+          cardio: zoneMap['Cardio'] || 0,
+          peak: zoneMap['Peak'] || 0,
+        }
+        break
+      }
+    }
+
+    // Total cardio + peak minutes across all days
+    for (const entry of entries) {
+      const zones = entry.value?.heartRateZones
+      if (zones) {
+        for (const z of zones) {
+          if (z.name === 'Cardio' || z.name === 'Peak') {
+            totalCardioMinutes += z.minutes || 0
+          }
+        }
+      }
+    }
   }
 
   // ── Active Minutes (fairly + very) ──
@@ -204,11 +257,40 @@ export async function fetchHealthTrends(
     avgActiveCurrent = avgLast(days, 7)
   }
 
-  // ── Sleep ──
+  // ── Sleep + Stages ──
   let sleepMinutes: number | undefined
+  let sleepStages: SleepStages | undefined
+
   if (sleepRes.status === 'fulfilled') {
     sleepMinutes = sleepRes.value?.summary?.totalMinutesAsleep
     console.log(`[Fitbit] Sleep: ${sleepMinutes ?? 'no data'} min`)
+
+    // Sleep stages from main sleep record
+    const mainSleep = sleepRes.value?.sleep?.[0]
+    if (mainSleep?.levels?.summary) {
+      const s = mainSleep.levels.summary
+      sleepStages = {
+        deep: s.deep?.minutes || 0,
+        light: s.light?.minutes || 0,
+        rem: s.rem?.minutes || 0,
+        wake: s.wake?.minutes || 0,
+      }
+      console.log(`[Fitbit] Sleep stages: deep=${sleepStages.deep}m light=${sleepStages.light}m rem=${sleepStages.rem}m wake=${sleepStages.wake}m`)
+    }
+  }
+
+  // ── HRV ──
+  let currentHRV: number | undefined
+  let baselineHRV: number | undefined
+
+  if (hrvRes.status === 'fulfilled') {
+    const entries = hrvRes.value?.hrv || []
+    const dailyHRV = entries
+      .map((e: { hrv: { dailyRmssd?: number } }) => Math.round(e.hrv?.dailyRmssd || 0))
+      .filter((v: number) => v > 0)
+    console.log(`[Fitbit] HRV: ${dailyHRV.length} days, sample: ${dailyHRV.slice(0, 3).join(', ')}`)
+    baselineHRV = avgFirst(dailyHRV, 7)
+    currentHRV = avgLast(dailyHRV, 7)
   }
 
   // ── Profile ──
@@ -216,26 +298,19 @@ export async function fetchHealthTrends(
   if (profileRes.status === 'fulfilled') {
     const user = profileRes.value?.user
     if (user) {
-      profile = {
-        name: user.displayName || '',
-        picture: user.avatar || '',
-      }
+      profile = { name: user.displayName || '', picture: user.avatar || '' }
     }
   }
 
   // ── Deltas ──
-  const deltaHR =
-    currentRestingHR != null && baselineRestingHR != null
-      ? currentRestingHR - baselineRestingHR
-      : undefined
-  const deltaSteps =
-    avgDailyStepsCurrent != null && avgDailyStepsBaseline != null
-      ? avgDailyStepsCurrent - avgDailyStepsBaseline
-      : undefined
-  const deltaActive =
-    avgActiveCurrent != null && avgActiveBaseline != null
-      ? avgActiveCurrent - avgActiveBaseline
-      : undefined
+  const deltaHR = currentRestingHR != null && baselineRestingHR != null
+    ? currentRestingHR - baselineRestingHR : undefined
+  const deltaSteps = avgDailyStepsCurrent != null && avgDailyStepsBaseline != null
+    ? avgDailyStepsCurrent - avgDailyStepsBaseline : undefined
+  const deltaActive = avgActiveCurrent != null && avgActiveBaseline != null
+    ? avgActiveCurrent - avgActiveBaseline : undefined
+  const deltaHRV = currentHRV != null && baselineHRV != null
+    ? currentHRV - baselineHRV : undefined
 
   return {
     current: {
@@ -244,20 +319,26 @@ export async function fetchHealthTrends(
       avgDailySteps: avgDailyStepsCurrent,
       activeMinutes: activeMinutesToday,
       sleepMinutes,
+      hrZones,
+      sleepStages,
+      hrv: currentHRV,
     },
     baseline: {
       avgRestingHR: baselineRestingHR,
       avgDailySteps: avgDailyStepsBaseline,
       avgActiveMinutes: avgActiveBaseline,
+      avgHRV: baselineHRV,
     },
     deltas: {
       restingHR: deltaHR,
       dailySteps: deltaSteps,
       activeMinutes: deltaActive,
+      hrv: deltaHRV,
     },
     totals: {
       totalSteps,
       totalActiveMinutes,
+      totalCardioMinutes: totalCardioMinutes > 0 ? totalCardioMinutes : undefined,
       programDays,
     },
     profile,

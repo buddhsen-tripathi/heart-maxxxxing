@@ -448,6 +448,9 @@ export default function GameShell() {
           trends={healthTrends}
           currentSession={state.currentSession}
           hideMilestone={!!activePowerup}
+          playerName={state.playerName}
+          goal={state.goal}
+          language={state.profile?.language}
         />
       )}
 
